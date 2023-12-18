@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Game Graphics Course 2023</title>
+        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+        <style>
+            body {
+                margin: 0;
+                background-color: #111111;
+                color: #aaa;
+                font-family: Roboto,sans-serif;
+            }
+            a:link {
+                color: white;
+                font-weight: bold;
+                text-decoration: none;
+            }
+
+            a:visited {
+                color: white;
+                font-weight: bold;
+                text-decoration: none;
+            }
+
+            a:hover {
+                color: white;
+                font-weight: bold;
+                text-decoration: underline;
+            }
+
+            h2 {
+                color: white;
+            }
+            header {
+                padding: 30px 30px;
+                background-color: #222222;
+                box-shadow: 0 5px 10px #010101;
+                position: fixed;
+                width: 100%;
+                top: 0;
+                font-size: 25px;
+                color: #f90;
+                font-weight: bold;
+            }
+            main {
+                padding: 100px 50px;
+            }
+            div.slides {
+                width:480px;
+                height:299px;
+                background-color:black;
+            }
+            div.desc {
+                padding-left: 20px;
+            }
+            div.topic {
+                padding-bottom: 20px;
+            }
+            div.topic > h2 {
+                border-bottom: 1px solid #444;
+                padding-bottom: 10px;
+            }
+            div.topic > div {
+                display: flex;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            My Devices and their GPU
+        </header>
+        <main>
+            <div class="topic">
+                <h2>Laptop</h2>
+                <div>
+                    <div class="desc">
+                        <b>Model:</b> <a href="https://www.dell.com/support/manuals/en-us/g-series-15-5505-laptop/dell-g5-15-5505-setup-and-specifications/gpu%E2%80%94integrated?guid=guid-013ac1ea-b06f-4de8-83b0-cbd3520605b2&lang=en-us"">
+                        Dell G5 SE 5505</a>
+                        <br><b>CPU:</b> <a href="https://www.techpowerup.com/cpu-specs/ryzen-5-4600h.c2283">
+                        AMD Ryzen 4600H</a> (6 Cores)
+                        <br>
+                        <ol>
+                            <b><li>Is it integrated or dedicated?</li></b>
+                            The GPU is labeled as "AMD Radeon Graphics", but it's the mobile <a href="https://www.techpowerup.com/gpu-specs/radeon-vega-6-mobile.c3079">
+                            Radeon RX Vega 6</a>. It comes integrated with the AMD CPU. I can run most games, but the performance varies.
+                            <br><br>
+                            <b><li>What kind of graphic APIs does it support?</li></b>
+                            As it's a Windows and AMD device, it supports a couple of APIs:
+                            <ul>
+                                <li>DirectX 12_1 (Windows/Microsoft product)</li>
+                                <li>OpenGL 4.6</li>
+                                <li>OpenCL 1.2</li>
+                                <li>Vulkan 1.2 (AMD product)</li>
+                            </ul>
+                            <br>
+                            <b><li>What kind of shading languages does it supports?</li></b>
+                            I wasn't able to find anything concrete, but I believe the DirectX shader model is 6.7, so it supports HLSL. 
+                        </ol>
+                    </div>     
+                </div>
+            </div>
+            <div class="topic">
+                <h2>Phone</h2>
+                <div>
+                    <div class="desc">
+                        <b>Model:</b><a href=https://support.apple.com/kb/SP820?locale=en_US">
+                        iPhone SE 2nd Generation</a>
+                        <br><b>SoC:</b> A13 Bionic chip (6 Cores)
+                        <br>
+                        <ol>
+                            <b><li>Is it integrated or dedicated?</li></b>
+                            All iPhone processors come integrated in the Apple chips. This one has a "4-core GPU". Graphic intensive games perform poorly, they overheat my phone, and they quickly drain its battery.
+                            <br><br>
+                            <b><li>What kind of graphic APIs does it support?</li></b>
+                            Since it's an Apple product, it supports the Metal API.
+                            <br><br>
+                            <b><li>What kind of shading languages does it supports?</li></b>
+                            Likewise, the shading language it uses would be MSL.
+                        </ol>
+                    </div>     
+                </div>
+            </div>
+            <div class="topic">
+                <h2>Gaming Console</h2>
+                <div>
+                    <div class="desc">
+                        <b>Model:</b><a href=https://www.nintendo.com/us/switch/tech-specs/#switch-section">
+                        Nintendo Switch</a>
+                        <br><b>SoC:</b> Nvidia Custom Tegra processor
+                        <br>
+                        <ol>
+                            <b><li>Is it integrated or dedicated?</li></b>
+                            This is another chip that handles all processes. It was not officially revealed by Nintendo, but the Switch's is known to be an integrated
+                            <a href="https://en.wikipedia.org/wiki/Nintendo_Switch#SoC,_CPU,_GPU_and_RAM">Nvidia Tegra X1</a>. It has 256 Maxwell-based cores.
+                            <br><br>
+                            <b><li>What kind of graphic APIs does it support?</li></b>
+                            Since the Switch is a multi-developer platform, it supports a <a href="https://www.notebookcheck.net/NVIDIA-Tegra-X1-Maxwell-GPU.137006.0.html">
+                            range of APIs</a>.
+                            <ul>
+                                <li>DirectX 11.2 (Xbox and PC Ports)</li>
+                                <li>OpenGL 4.5</li>
+                                <li>CUDA 6.0 (NVIDIA product)</li>
+                            </ul>
+                            <br>
+                            <b><li>What kind of shading languages does it supports?</li></b>
+                            Given the APIs, it supports GLSL and HLSL. It also supports <a href="https://en.wikipedia.org/wiki/CUDA#">C, C++, and Fortran</a> for handling CUDA.
+                        </ol>
+                    </div>     
+                </div>
+            </div>
+        </main> 
+    </body>
+</html>
