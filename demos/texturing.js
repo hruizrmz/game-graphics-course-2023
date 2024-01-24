@@ -85,6 +85,57 @@ let vertexArray = app.createVertexArray()
     .vertexAttributeBuffer(2, app.createVertexBuffer(PicoGL.FLOAT, 2, uvs))
     .indexBuffer(app.createIndexBuffer(PicoGL.UNSIGNED_INT, 3, indices));
 
+/*
+mapping texture to show a different image for each face of the cube
+https://webglfundamentals.org/webgl/lessons/webgl-3d-textures.html
+
+app.ARRAY_BUFFER, new Float32Array
+([
+    // select the top left image
+    0   , 0  ,
+    0   , 0.5,
+    0.25, 0  ,
+    0   , 0.5,
+    0.25, 0.5,
+    0.25, 0  ,
+    // select the top middle image
+    0.25, 0  ,
+    0.5 , 0  ,
+    0.25, 0.5,
+    0.25, 0.5,
+    0.5 , 0  ,
+    0.5 , 0.5,
+    // select to top right image
+    0.5 , 0  ,
+    0.5 , 0.5,
+    0.75, 0  ,
+    0.5 , 0.5,
+    0.75, 0.5,
+    0.75, 0  ,
+    // select the bottom left image
+    0   , 0.5,
+    0.25, 0.5,
+    0   , 1  ,
+    0   , 1  ,
+    0.25, 0.5,
+    0.25, 1  ,
+    // select the bottom middle image
+    0.25, 0.5,
+    0.25, 1  ,
+    0.5 , 0.5,
+    0.25, 1  ,
+    0.5 , 1  ,
+    0.5 , 0.5,
+    // select the bottom right image
+    0.5 , 0.5,
+    0.75, 0.5,
+    0.5 , 1  ,
+    0.5 , 1  ,
+    0.75, 0.5,
+    0.75, 1  ,
+])
+*/
+
 let skyboxArray = app.createVertexArray()
     .vertexAttributeBuffer(0, app.createVertexBuffer(PicoGL.FLOAT, 3, planePositions))
     .indexBuffer(app.createIndexBuffer(PicoGL.UNSIGNED_INT, 3, planeIndices));
@@ -103,24 +154,25 @@ async function loadTexture(fileName) {
     return await createImageBitmap(await (await fetch("images/" + fileName)).blob());
 }
 
-const tex = await loadTexture("abstract.jpg");
+const tex = await loadTexture("omori.png");
 let drawCall = app.createDrawCall(program, vertexArray)
     .texture("tex", app.createTexture2D(tex, tex.width, tex.height, {
         magFilter: PicoGL.LINEAR,
-        minFilter: PicoGL.LINEAR_MIPMAP_LINEAR,
-        maxAnisotropy: 10,
-        wrapS: PicoGL.REPEAT,
-        wrapT: PicoGL.REPEAT
+        minFilter: PicoGL.LINEAR,
+        maxAnisotropy: 1,
+        wrapS: PicoGL.MIRRORED_REPEAT,
+        wrapT: PicoGL.MIRRORED_REPEAT
     }));
 
 let skyboxDrawCall = app.createDrawCall(skyboxProgram, skyboxArray)
     .texture("cubemap", app.createCubemap({
-        negX: await loadTexture("stormydays_bk.png"),
-        posX: await loadTexture("stormydays_ft.png"),
-        negY: await loadTexture("stormydays_dn.png"),
-        posY: await loadTexture("stormydays_up.png"),
-        negZ: await loadTexture("stormydays_lf.png"),
-        posZ: await loadTexture("stormydays_rt.png")
+        negX: await loadTexture("back.png"),
+        posX: await loadTexture("front.png"),
+        negY: await loadTexture("bottom.png"),
+        posY: await loadTexture("top.png"),
+        negZ: await loadTexture("left.png"),
+        posZ: await loadTexture("right.png"),
+        wrapT: PicoGL.MIRRORED_REPEAT
     }));
 
 function draw(timems) {
