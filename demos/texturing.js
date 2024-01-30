@@ -31,6 +31,7 @@ let fragmentShader = `
 let vertexShader = `
     #version 300 es
             
+    uniform float time;
     uniform mat4 modelViewProjectionMatrix;
     
     layout(location=0) in vec3 position;
@@ -41,7 +42,7 @@ let vertexShader = `
     
     void main()
     {
-        gl_Position = modelViewProjectionMatrix * vec4(position, 1.0);           
+        gl_Position = modelViewProjectionMatrix * vec4(position, cos(time/1.5));           
         v_uv = uv;
     }
 `;
@@ -85,57 +86,6 @@ let vertexArray = app.createVertexArray()
     .vertexAttributeBuffer(2, app.createVertexBuffer(PicoGL.FLOAT, 2, uvs))
     .indexBuffer(app.createIndexBuffer(PicoGL.UNSIGNED_INT, 3, indices));
 
-/*
-mapping texture to show a different image for each face of the cube
-https://webglfundamentals.org/webgl/lessons/webgl-3d-textures.html
-
-app.ARRAY_BUFFER, new Float32Array
-([
-    // select the top left image
-    0   , 0  ,
-    0   , 0.5,
-    0.25, 0  ,
-    0   , 0.5,
-    0.25, 0.5,
-    0.25, 0  ,
-    // select the top middle image
-    0.25, 0  ,
-    0.5 , 0  ,
-    0.25, 0.5,
-    0.25, 0.5,
-    0.5 , 0  ,
-    0.5 , 0.5,
-    // select to top right image
-    0.5 , 0  ,
-    0.5 , 0.5,
-    0.75, 0  ,
-    0.5 , 0.5,
-    0.75, 0.5,
-    0.75, 0  ,
-    // select the bottom left image
-    0   , 0.5,
-    0.25, 0.5,
-    0   , 1  ,
-    0   , 1  ,
-    0.25, 0.5,
-    0.25, 1  ,
-    // select the bottom middle image
-    0.25, 0.5,
-    0.25, 1  ,
-    0.5 , 0.5,
-    0.25, 1  ,
-    0.5 , 1  ,
-    0.5 , 0.5,
-    // select the bottom right image
-    0.5 , 0.5,
-    0.75, 0.5,
-    0.5 , 1  ,
-    0.5 , 1  ,
-    0.75, 0.5,
-    0.75, 1  ,
-])
-*/
-
 let skyboxArray = app.createVertexArray()
     .vertexAttributeBuffer(0, app.createVertexBuffer(PicoGL.FLOAT, 3, planePositions))
     .indexBuffer(app.createIndexBuffer(PicoGL.UNSIGNED_INT, 3, planeIndices));
@@ -176,10 +126,10 @@ let skyboxDrawCall = app.createDrawCall(skyboxProgram, skyboxArray)
     }));
 
 function draw(timems) {
-    const time = timems * 0.001;
+    const time = timems * 0.004;
 
     mat4.perspective(projMatrix, Math.PI / 2, app.width / app.height, 0.1, 100.0);
-    let camPos = vec3.rotateY(vec3.create(), vec3.fromValues(0, 0.5, 2), vec3.fromValues(0, 0, 0), time * 0.05);
+    let camPos = vec3.rotateY(vec3.create(), vec3.fromValues(0, 0.5, 4), vec3.fromValues(0, 0, 0), time * 0.05);
     mat4.lookAt(viewMatrix, camPos, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
     mat4.multiply(viewProjMatrix, projMatrix, viewMatrix);
 
@@ -195,6 +145,7 @@ function draw(timems) {
     mat4.invert(skyboxViewProjectionInverse, skyboxViewProjectionMatrix);
 
     app.clear();
+    drawCall.uniform("time", time);
 
     app.disable(PicoGL.DEPTH_TEST);
     app.disable(PicoGL.CULL_FACE);
