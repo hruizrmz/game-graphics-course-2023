@@ -1,18 +1,18 @@
 import PicoGL from "../node_modules/picogl/build/module/picogl.js";
 import {mat4, vec3} from "../node_modules/gl-matrix/esm/index.js";
 
-import {positions, normals, indices} from "../blender/monkey.js"
+import {positions, normals, indices, uvs} from "../blender/monkey.js"
 
 // ******************************************************
 // **               Light configuration                **
 // ******************************************************
 
-let baseColor = vec3.fromValues(1.0, 0.1, 0.2);
-let ambientLightColor = vec3.fromValues(0.1, 0.1, 1.0);
-let numberOfPointLights = 2;
-let pointLightColors = [vec3.fromValues(1.0, 1.0, 1.0), vec3.fromValues(0.02, 0.4, 0.5)];
-let pointLightInitialPositions = [vec3.fromValues(5, 0, 2), vec3.fromValues(-5, 0, 2)];
-let pointLightPositions = [vec3.create(), vec3.create()];
+let baseColor = vec3.fromValues(0.6, 0.8, 1.0); // light blue
+let ambientLightColor = vec3.fromValues(0.5, 0.5, 0.5);
+let numberOfPointLights = 3;
+let pointLightColors = [vec3.fromValues(1.0, 0.2, 0.8), vec3.fromValues(0.1, 1.0, 0.3), vec3.fromValues(1.0, 1.0, 1.0)]; // pink, green, white
+let pointLightInitialPositions = [vec3.fromValues(5, 0, 2), vec3.fromValues(-5, 0, 2), vec3.fromValues(10, 0, -20)];
+let pointLightPositions = [vec3.create(), vec3.create(), vec3.create()];
 
 
 // language=GLSL
@@ -27,10 +27,10 @@ let lightCalculationShader = `
     // This function calculates light reflection using Phong reflection model (ambient + diffuse + specular)
     vec4 calculateLights(vec3 normal, vec3 position) {
         float ambientIntensity = 0.5;
-        float diffuseIntensity = 1.0;
-        float specularIntensity = 2.0;
+        float diffuseIntensity = 0.8;
+        float specularIntensity = 5.0;
         float specularPower = 100.0;
-        float metalness = 0.0;
+        float metalness = 0.7;
 
         vec3 viewDirection = normalize(cameraPosition.xyz - position);
         vec3 color = baseColor * ambientLightColor * ambientIntensity;
@@ -65,9 +65,12 @@ let fragmentShader = `
     
     out vec4 outColor;        
     
+    uniform sampler2D tex;    
+    in vec2 v_uv;
+    
     void main() {                      
         // For Phong shading (per-fragment) move color calculation from vertex to fragment shader
-        outColor = calculateLights(normalize(vNormal), vPosition);
+        outColor = calculateLights(normalize(vNormal), vPosition) * texture(tex, v_uv);
         // outColor = vColor;
     }
 `;
@@ -79,6 +82,7 @@ let vertexShader = `
         
     layout(location=0) in vec4 position;
     layout(location=1) in vec4 normal;
+    layout(location=2) in vec2 uv;
     
     uniform mat4 viewProjectionMatrix;
     uniform mat4 modelMatrix;            
@@ -86,6 +90,8 @@ let vertexShader = `
     out vec3 vPosition;    
     out vec3 vNormal;
     out vec4 vColor;
+
+    out vec2 v_uv;
     
     void main() {
         vec4 worldPosition = modelMatrix * position;
@@ -96,7 +102,8 @@ let vertexShader = `
         // For Gouraud shading (per-vertex) move color calculation from fragment to vertex shader
         //vColor = calculateLights(normalize(vNormal), vPosition);
         
-        gl_Position = viewProjectionMatrix * worldPosition;                        
+        gl_Position = viewProjectionMatrix * worldPosition;               
+        v_uv = uv;         
     }
 `;
 
@@ -109,6 +116,7 @@ let program = app.createProgram(vertexShader.trim(), fragmentShader.trim());
 let vertexArray = app.createVertexArray()
     .vertexAttributeBuffer(0, app.createVertexBuffer(PicoGL.FLOAT, 3, positions))
     .vertexAttributeBuffer(1, app.createVertexBuffer(PicoGL.FLOAT, 3, normals))
+    .vertexAttributeBuffer(2, app.createVertexBuffer(PicoGL.FLOAT, 2, uvs))
     .indexBuffer(app.createIndexBuffer(PicoGL.UNSIGNED_INT, 3, indices));
 
 let projectionMatrix = mat4.create();
@@ -116,7 +124,19 @@ let viewMatrix = mat4.create();
 let viewProjectionMatrix = mat4.create();
 let modelMatrix = mat4.create();
 
+async function loadTexture(fileName) {
+    return await createImageBitmap(await (await fetch("images/" + fileName)).blob());
+}
+
+const tex = await loadTexture("diamond.jpg");
 let drawCall = app.createDrawCall(program, vertexArray)
+    .texture("tex", app.createTexture2D(tex, tex.width, tex.height, {
+        magFilter: PicoGL.LINEAR,
+        minFilter: PicoGL.LINEAR,
+        maxAnisotropy: 1,
+        wrapS: PicoGL.REPEAT,
+        wrapT: PicoGL.REPEAT,
+    }))
     .uniform("baseColor", baseColor)
     .uniform("ambientLightColor", ambientLightColor);
 
