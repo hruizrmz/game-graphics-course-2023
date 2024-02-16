@@ -87,8 +87,8 @@ let shadowVertexShader = `
     }
 `;
 
-let bgColor = vec4.fromValues(1.0, 0.2, 0.3, 1.0);
-let fgColor = vec4.fromValues(1.0, 0.9, 0.5, 1.0);
+let bgColor = vec4.fromValues(1.0, 0.2, 0.3, 1.0); // red
+let fgColor = vec4.fromValues(0.5, 0.2, 1.0, 1.0); // purple
 
 app.enable(PicoGL.DEPTH_TEST)
    .enable(PicoGL.CULL_FACE)
@@ -103,7 +103,7 @@ let vertexArray = app.createVertexArray()
     .indexBuffer(app.createIndexBuffer(PicoGL.UNSIGNED_INT, 3, indices));
 
 // Change the shadow texture resolution to checkout the difference
-let shadowDepthTarget = app.createTexture2D(512, 512, {
+let shadowDepthTarget = app.createTexture2D(256, 256, {
     internalFormat: PicoGL.DEPTH_COMPONENT16,
     compareMode: PicoGL.COMPARE_REF_TO_TEXTURE,
     magFilter: PicoGL.LINEAR,
@@ -129,7 +129,7 @@ let lightViewProjMatrix = mat4.create();
 
 let drawCall = app.createDrawCall(program, vertexArray)
     .uniform("baseColor", fgColor)
-    .uniform("ambientColor", vec4.scale(vec4.create(), bgColor, 0.7))
+    .uniform("ambientColor", vec4.scale(vec4.create(), bgColor, 0.4))
     .uniform("modelMatrix", modelMatrix)
     .uniform("modelViewProjectionMatrix", modelViewProjectionMatrix)
     .uniform("cameraPosition", cameraPosition)
@@ -187,12 +187,12 @@ function drawObjects(dc) {
 function draw(timems) {
     time = timems * 0.001;
 
-    vec3.set(cameraPosition, 0, 2, 4);
+    vec3.set(cameraPosition, 2, 2, 3);
     mat4.perspective(projMatrix, Math.PI / 2.5, app.width / app.height, 0.1, 100.0);
     mat4.lookAt(viewMatrix, cameraPosition, vec3.fromValues(0, -0.5, 0), vec3.fromValues(0, 1, 0));
     mat4.multiply(viewProjMatrix, projMatrix, viewMatrix);
 
-    vec3.set(lightPosition, 5, 5, 2.5);
+    vec3.set(lightPosition, 6, 6 - Math.sin(time*6), 3.5 - Math.cos(time*6));
     mat4.lookAt(lightViewMatrix, lightPosition, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
 
     renderShadowMap();
