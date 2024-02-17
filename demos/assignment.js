@@ -1,5 +1,5 @@
 import PicoGL from "../node_modules/picogl/build/module/picogl.js";
-import {mat4, vec3, vec4} from "../node_modules/gl-matrix/esm/index.js";
+import {mat4, vec3, vec4, quat} from "../node_modules/gl-matrix/esm/index.js";
 
 import {positions, normals, uvs, indices} from "../blender/kuma.js"
 
@@ -15,8 +15,9 @@ let fragmentShader = `
     out vec4 outColor;
     
     void main()
-    {        
-        outColor = texture(tex, v_uv);
+    {   
+        vec2 invertedUV = vec2(v_uv.x, 1.0 - v_uv.y); // texture was being loaded backwards
+        outColor = texture(tex, invertedUV);
     }
 `;
 
@@ -25,11 +26,10 @@ let vertexShader = `
     #version 300 es
             
     uniform float time;
-    uniform mat4 viewProjectionMatrix;
     uniform mat4 modelMatrix;
+    uniform mat4 modelViewProjectionMatrix;
     
     layout(location=0) in vec4 position;
-    layout(location=1) in vec3 normal;
     layout(location=2) in vec2 uv;
         
     out vec2 v_uv;
@@ -37,16 +37,18 @@ let vertexShader = `
     void main()
     {
         vec4 worldPosition = modelMatrix * position;
-        gl_Position = viewProjectionMatrix * worldPosition;               
+        gl_Position = modelViewProjectionMatrix * worldPosition;
         v_uv = uv;
     }
 `;
+
+app.enable(PicoGL.DEPTH_TEST)
+   .enable(PicoGL.CULL_FACE);
 
 let program = app.createProgram(vertexShader.trim(), fragmentShader.trim());
 
 let vertexArray = app.createVertexArray()
     .vertexAttributeBuffer(0, app.createVertexBuffer(PicoGL.FLOAT, 3, positions))
-    .vertexAttributeBuffer(1, app.createVertexBuffer(PicoGL.FLOAT, 3, normals))
     .vertexAttributeBuffer(2, app.createVertexBuffer(PicoGL.FLOAT, 2, uvs))
     .indexBuffer(app.createIndexBuffer(PicoGL.UNSIGNED_INT, 3, indices));
 
@@ -56,6 +58,7 @@ let viewProjMatrix = mat4.create();
 let modelMatrix = mat4.create();
 let modelViewMatrix = mat4.create();
 let modelViewProjectionMatrix = mat4.create();
+let modelRotation = quat.create();
 
 async function loadTexture(fileName) {
     return await createImageBitmap(await (await fetch("images/" + fileName)).blob());
@@ -71,24 +74,28 @@ let drawCall = app.createDrawCall(program, vertexArray)
         wrapT: PicoGL.CLAMP_TO_EDGE
     }));
 
-function draw(timems) {
-    let time = timems / 1000;
+let cameraPosition = vec3.fromValues(0, 0, 100);
 
-    mat4.perspective(projMatrix, Math.PI / 2, app.width / app.height, 0.1, 100.0);
-    let camPos = vec3.rotateY(vec3.create(), vec3.fromValues(0, 0.5, 4), vec3.fromValues(0, 0, 0), time * 0.05);
-    mat4.lookAt(viewMatrix, camPos, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
+// Fixing Kuma rotation + center
+quat.fromEuler(modelRotation, 90, 5, 90);
+mat4.fromRotationTranslationScale(modelMatrix, modelRotation, vec3.fromValues(0, -3, 0), [0.8, 0.8, 0.8]);
+
+function draw(timems) {
+    const time = timems * 0.02;
+
+    mat4.perspective(projMatrix, Math.PI / 7, app.width / app.height, 0.1, 1000.0);
+    vec3.rotateY(cameraPosition, vec3.fromValues(0, 0, 80), vec3.fromValues(0, 0, 0), time * 0.02);
+    mat4.lookAt(viewMatrix, cameraPosition, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
     mat4.multiply(viewProjMatrix, projMatrix, viewMatrix);
 
-    mat4.scale(modelMatrix, modelMatrix, vec3.fromValues(0.2, 0.2, 0.2));
-    mat4.fromTranslation(modelMatrix, vec3.fromValues(-2, 0, 0));
-
-    mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
+    //mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
     mat4.multiply(modelViewProjectionMatrix, viewProjMatrix, modelMatrix);
 
-    app.enable(PicoGL.DEPTH_TEST);
-    app.enable(PicoGL.CULL_FACE);
+    drawCall.uniform("time", time);
     drawCall.uniform("modelMatrix", modelMatrix);
-    drawCall.uniform("viewProjectionMatrix", modelViewProjectionMatrix);
+    drawCall.uniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
+
+    app.clear();
     drawCall.draw();
 
     requestAnimationFrame(draw);
