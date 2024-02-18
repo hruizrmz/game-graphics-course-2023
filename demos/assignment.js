@@ -410,12 +410,11 @@ function renderReflectionTexture(time)
 {
     app.drawFramebuffer(reflectionBuffer);
     app.viewport(0, 0, reflectionColorTarget.width, reflectionColorTarget.height);
-    app.gl.cullFace(app.gl.FRONT);
-    
-    vec3.rotateY(cameraPosition, vec3.fromValues(0, 20, 120), vec3.fromValues(0, 0, 0), -time * 0.01); // circular rotation
-    mat4.lookAt(viewMatrix, cameraPosition, vec3.fromValues(0, 15, 0), vec3.fromValues(0, -1, 0));
-    quat.fromEuler(modelRotation, -90, 90, 5 * Math.cos(time * 0.2));
-    mat4.fromRotationTranslationScale(modelMatrix, modelRotation, vec3.fromValues(2.5, 1, -15), [0.85, 1.0, 1.1]);
+    app.gl.cullFace(app.gl.BACK);
+
+    vec3.rotateY(cameraPosition, vec3.fromValues(0, 20, 150), vec3.fromValues(0, 0, 0), -time * 0.01); // circular rotation
+    vec3.rotateZ(cameraPosition, cameraPosition, vec3.fromValues(0, 0, 0), Math.sin(time / 30) / 6); // up and down movement
+    mat4.lookAt(viewMatrix, cameraPosition, vec3.fromValues(0, -0.5, 0), vec3.fromValues(0, -1, 0));
 
     let reflectionMatrix = calculateSurfaceReflectionMatrix(mat4.create(), mirrorMatrix, vec3.fromValues(0, 1, 0));
     let reflectionViewMatrix = mat4.mul(mat4.create(), viewMatrix, reflectionMatrix);
