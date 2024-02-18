@@ -191,7 +191,6 @@ let mirrorVertexShader = `
         v_uv = uv;
         vec4 pos = position;
         pos.xz *= 1.5;
-        gl_Position = mirrorViewProjectionMatrix * pos;
 
         gl_Position = mirrorViewProjectionMatrix * position;
         vMirrorPosition = vec3(position);
@@ -390,14 +389,14 @@ let skyboxDrawCall = app.createDrawCall(skyboxProgram, skyboxArray)
     .texture("cubemap", cubemap);
 
 let mirrorDrawCall = app.createDrawCall(mirrorProgram, mirrorArray)
-    .texture("reflectionTex", reflectionColorTarget)
-    .texture("distortionMap", app.createTexture2D(await loadTexture("gold.jpg")))
     .uniform("shadowColor", vec4.scale(vec4.create(), shadowColor, 0.4))
     .uniform("mirrorMatrix", mirrorMatrix)
     .uniform("mirrorViewProjectionMatrix", mirrorViewProjectionMatrix)
     .uniform("cameraPosition", cameraPosition)
     .uniform("lightPosition", lightPosition)
     .uniform("lightModelViewProjectionMatrix", lightModelViewProjectionMatrix)
+    .texture("reflectionTex", reflectionColorTarget)
+    .texture("distortionMap", app.createTexture2D(await loadTexture("gold.jpg")))
     .texture("shadowMap", shadowDepthTarget);
 
 let shadowDrawCall = app.createDrawCall(shadowProgram, vertexArray)
@@ -411,9 +410,12 @@ function renderReflectionTexture(time)
 {
     app.drawFramebuffer(reflectionBuffer);
     app.viewport(0, 0, reflectionColorTarget.width, reflectionColorTarget.height);
-    app.gl.cullFace(app.gl.BACK);
+    app.gl.cullFace(app.gl.FRONT);
+    
     vec3.rotateY(cameraPosition, vec3.fromValues(0, 20, 120), vec3.fromValues(0, 0, 0), -time * 0.01); // circular rotation
-    mat4.lookAt(viewMatrix, cameraPosition, vec3.fromValues(0, -25, 0), vec3.fromValues(0, -1, 0));
+    mat4.lookAt(viewMatrix, cameraPosition, vec3.fromValues(0, 15, 0), vec3.fromValues(0, -1, 0));
+    quat.fromEuler(modelRotation, -90, 90, 5 * Math.cos(time * 0.2));
+    mat4.fromRotationTranslationScale(modelMatrix, modelRotation, vec3.fromValues(2.5, 1, -15), [0.85, 1.0, 1.1]);
 
     let reflectionMatrix = calculateSurfaceReflectionMatrix(mat4.create(), mirrorMatrix, vec3.fromValues(0, 1, 0));
     let reflectionViewMatrix = mat4.mul(mat4.create(), viewMatrix, reflectionMatrix);
@@ -477,10 +479,6 @@ function drawObjects(cameraPosition, viewMatrix) {
     drawCall.uniform("normalMatrix", mat3.normalFromMat4(mat3.create(), modelMatrix));
     drawCall.uniform("cameraPosition", cameraPosition);
     drawCall.draw(); 
-
-    mirrorDrawCall.uniform("mirrorViewProjectionMatrix", mirrorViewProjectionMatrix);
-    mirrorDrawCall.uniform("screenSize", vec2.fromValues(app.width, app.height))
-    mirrorDrawCall.draw();
 }
 
 function draw(timems) {
@@ -505,8 +503,8 @@ function draw(timems) {
     mat4.lookAt(viewMatrix, cameraPosition, vec3.fromValues(0, -0.5, 0), vec3.fromValues(0, 1, 0));
 
     // Mirror movement
-    quat.fromEuler(mirrorRotation, 0, 10, Math.sin(time / 30) / 6);
-    mat4.fromRotationTranslationScale(mirrorMatrix, mirrorRotation, vec3.fromValues(0, -25, 10), [45.0, 45.0, 45.0]);
+    quat.fromEuler(mirrorRotation, 35 * Math.cos(time * 0.01), 0, Math.sin(time / 30) / 6);
+    mat4.fromRotationTranslationScale(mirrorMatrix, mirrorRotation, vec3.fromValues(0, -20, 10 * Math.cos(time * 0.05)), [35.0, 2.0, 35.0]);
 
     // Fixing Kuma rotation/center + bouncy animation
     quat.fromEuler(modelRotation, -90, -90, -5 * Math.cos(time * 0.2));
@@ -520,6 +518,11 @@ function draw(timems) {
     mat4.multiply(viewProjMatrix, projMatrix, viewMatrix);
     renderShadowMap();
     drawObjects(cameraPosition, viewMatrix);
+
+    mirrorDrawCall.uniform("mirrorViewProjectionMatrix", mirrorViewProjectionMatrix);
+    mirrorDrawCall.uniform("screenSize", vec2.fromValues(app.width, app.height))
+    mirrorDrawCall.draw();
+    
     requestAnimationFrame(draw);
 }
 
