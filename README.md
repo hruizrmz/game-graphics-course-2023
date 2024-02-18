@@ -1,3 +1,8 @@
+My Final WebGL Demo ([assignment.js](https://github.com/hruizrmz/game-graphics-course-2023/blob/main/demos/assignment.js))
+
+https://github.com/hruizrmz/game-graphics-course-2023/assets/19335251/74945328-b5d3-4c4c-a2dc-b6a3b7fe7ae8
+
+---
 # Game Graphics Course
 
 Video Game Graphics course for Estonian Entrepreneurship University of Applied Sciences, 2023
